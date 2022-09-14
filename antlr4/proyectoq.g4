@@ -1,0 +1,104 @@
+grammar proyectoq;
+
+prog : registro_q EOL;
+expr : seleccion | operar | tensor | union | inversa | medir ;
+registro_q : INI id
+               | INI  id array_q
+               | INI  id OP_Y expr
+               | INI  id array_q OP_Y expr
+		| INI
+               ;
+seleccion : SELE PRA id PRC OP_IGUAL id PCA INDEX OP_DOSP INDEX PCC
+              | SELE PRA id PRC OP_IGUAL id PCA INDEX OP_DOSP INDEX PCC expr
+              ;
+operar : OP (PUERTA_Q) (PRA) (id) (PRC)
+           | OP (PUERTA_Q) (PRA) (id) (PRC) (expr)
+           ;
+tensor : TEN  (id) ENTRE (PRA) (id) (COMA) (id) (PRC)
+           | TEN  (id) ENTRE (PRA) (id) (COMA) (id) (PRC) (expr)
+           ;
+union : UN (id) ENTRE (PRA) (id) (COMA) (id) (PRC)
+          | UN (id) ENTRE (PRA) (id) (COMA) (id) (PRC) (expr)
+          ;
+inversa : INV (id) (PRA) (id) (PRC)
+            | INV (id) (PRA) (id) (PRC) (expr)
+            ;
+medir : MED (id) EN (id)
+          | MED (id) EN (id) (expr)
+          ;
+PUERTA_Q : 'x' | 'not' | 'y' | 'z' | 'h' | 'hadamard' | 'cnot' | 'fase' | 'swap' ;
+INI : 'inicio' | 'INICIO' ;
+SELE : 'seleccion' | 'SELECCION' ;
+EN : 'en' | 'EN' ;
+OP : 'operar' | 'OPERAR' ;
+TEN : 'tensor' | 'TENSOR' ;
+ENTRE : 'entre' | 'ENTRE' ;
+UN : 'union' | 'UNION' ;
+INV : 'inv' | 'INV' ;
+MED : 'medir' | 'MEDIR' ;
+
+id : (LETRA)+(DIGITO)*;
+
+array_q : PCA QUBIT PCC | PCA QUBIT COMA mas_q PCC ;
+mas_q : QUBIT | QUBIT COMA mas_q ;
+
+QUBIT : '0' | '1' ;
+INDEX : '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' ;
+
+NEWLINE:    ('\r')? '\n' -> channel(HIDDEN);
+WHITESPACE: (' '|'\t')+ -> channel(HIDDEN);
+DIGITO : '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' ;
+N_INTEGER : ('-')?(DIGITO+) ;
+N_FLOAT : ('-')?((DIGITO*)PUNTO(DIGITO+)) ;
+LETRA : 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J'
+| 'K' | 'L' | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T'
+| 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' | 'a' | 'b' | 'c' | 'd'
+| 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n'
+| 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x'
+| 'y' | 'z'
+ ;
+ESPACIO : ' ' ;
+COMENTARIO_INI : '/*' ;
+COMENTARIO_FIN :'*/' ;
+COMA :',' ;
+PUNTO :'.' ;
+OP_SUM : '+' ;
+OP_REST	: '-' ;
+OP_POR : '*' ;
+OP_DIV : '/' ;
+OP_IGUAL : '=' ;
+OP_MAYOR : '>' ;
+OP_MENOR : '<' ;
+OP_MAYOR_IGUAL : '>=' ;
+OP_MENOR_IGUAL : '<=' ;
+OP_EQUI : '==' ;
+OP_NEG : '!' ;
+OP_DOSP : ':' ;
+OP_DIF : '!=' ;
+OP_Y : '&' ;
+OP_LOGICA : OP_MAYOR| OP_MENOR| OP_MAYOR_IGUAL| OP_MENOR_IGUAL| OP_EQUI| OP_NEG| OP_DIF ;
+OP_ARITMETICA : OP_SUM | OP_REST | OP_POR | OP_DIV ;
+LLA : '{' ;
+LLC : '}' ;
+PRA : '(' ;
+PRC : ')' ;
+PCA : '[' ;
+PCC : ']' ;
+EOL: ';' ;
+
+array : (PRA)(((N_INTEGER|N_FLOAT|id|variable)(COMA))?)(N_INTEGER|N_FLOAT|id|variable)(PRC) ;
+matriz : (PCA)(((array)(COMA))?)(array)(PCC) ;
+IF: 'if'|'IF' ;
+WHILE: 'while'|'WHILE' ;
+VAR: 'VAR' ;
+FINVAR: 'FINVAR' ;
+INT: 'INT'|'int' ;
+FLOAT: 'float'|'FLOAT' ;
+ELSE: 'else'|'ELSE' ;
+variable: (OP_DOSP)(id) ;
+variable_declar:(VAR)(variable)(OP_IGUAL)(array|matriz|id|N_FLOAT|variable|((N_FLOAT|N_INTEGER)(OP_ARITMETICA)(N_FLOAT|N_INTEGER)))(EOL)(FINVAR) ;
+condicion : (variable)(OP_LOGICA)(variable) ;
+sentencia : (variable_declar| if_sentencia | while_sentencia)+ ;
+if_sentencia:(IF)(PRA)(condicion)(PRC)(LLA)(sentencia)(LLC)(else_sentencia)? ;
+else_sentencia:(ELSE)(LLA)(sentencia)(LLC) ;
+while_sentencia: (WHILE)(PRA)(condicion)(PRC)(LLA)(sentencia)(LLC) ;
